@@ -12,6 +12,9 @@ import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class UserService {
+  // getAllUsers() {
+  //   throw new Error('Method not implemented.');
+  // }
   constructor(private prisma: PrismaService) {}
 
   async register(createUserDto: CreateUserDto) {
@@ -34,4 +37,14 @@ export class UserService {
     if (!user) throw new NotFoundException('User not found');
     return user;
   }
+
+  async getAllUsers() {
+  return this.prisma.user.findMany({
+    select: {
+      id: true,
+      name: true, // assuming 'name' is a single field, not split into first/last
+    },
+  });
+}
+
 }

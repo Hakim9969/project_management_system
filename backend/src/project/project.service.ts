@@ -81,7 +81,7 @@ export class ProjectService {
     // ✅ Notify admin when a user completes their project
     try {
       await this.mailService.sendEmail({
-        to: 'admin@example.com', // ✅ replace with real admin email or fetch dynamically
+        to: 'hakgotchills@gmail.com', // ✅ replace with real admin email or fetch dynamically
         subject: `Project Completed by ${user.name}`,
         text: `User ${user.name} (${user.email}) has completed the project "${user.project.name}".`,
       });
@@ -133,4 +133,20 @@ export class ProjectService {
 
     return user.project;
   }
+
+  async unassignProjectFromUser(userId: number): Promise<any> {
+  const user = await this.prisma.user.findUnique({ where: { id: userId } });
+
+  if (!user || !user.projectId) {
+    throw new NotFoundException('User has no assigned project.');
+  }
+
+  const updatedUser = await this.prisma.user.update({
+    where: { id: userId },
+    data: { projectId: null },
+  });
+
+  return { message: `Project unassigned from ${user.name}` };
+}
+
 }

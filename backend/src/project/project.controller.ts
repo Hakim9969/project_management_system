@@ -6,13 +6,14 @@ import { RolesGuard } from 'src/auth/guards/roles.guard';
 import { Roles } from 'src/auth/roles.decorator';
 import { AssignProjectDto } from './dto/assign-project.dto';
 import { AdminGuard } from 'src/auth/guards/admin.guard';
+import { AuthGuard } from '@nestjs/passport';
 
 @Controller('projects')
 export class ProjectController {
   constructor(private readonly projectService: ProjectService) {}
   // Admin: Create a project
   @Post('create')
-  @UseGuards(JwtAuthGuard, RolesGuard, AdminGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard, AdminGuard, AuthGuard('jwt'))
   @Roles('admin') // Only admin can access
   create(@Body() createProjectDto: CreateProjectDto) {
     return this.projectService.create(createProjectDto);
@@ -58,4 +59,12 @@ getMyProject(@Req() req: any) {
   const userId = req.user.userId;
   return this.projectService.getMyProject(userId);
 }
+
+@Post('unassign')
+@UseGuards(JwtAuthGuard, RolesGuard, AdminGuard)
+@Roles('admin')
+unassignProject(@Body() body: { userId: number }) {
+  return this.projectService.unassignProjectFromUser(body.userId);
+}
+
 }

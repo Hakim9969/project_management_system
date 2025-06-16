@@ -17,4 +17,11 @@ export class UserController {
   register(@Body() dto: CreateUserDto) {
     return this.userService.register(dto);
   }
+
+  @UseGuards(JwtAuthGuard)
+@Get()
+getAllUsers() {
+  return this.userService.getAllUsers();
+}
+
 }
