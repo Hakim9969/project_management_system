@@ -30,40 +30,60 @@
   <div id="admin-dashboard" class="admin-dashboard hidden">
     <h1>Admin Dashboard</h1>
 
-    <form id="project-form">
-      <h2>Create Project</h2>
-      <input type="text" id="project-name" placeholder="Project Name" required />
-      <textarea id="project-desc" placeholder="Project Description" required></textarea>
-      <input type="date" id="project-end" required />
-      <button type="submit">Create Project</button>
-    </form>
-
-    <form id="assign-form">
-      <h2>Assign Project</h2>
-      <label for="user-select">Select User:</label>
-      <select id="user-select" required></select>
-      <label for="project-select">Select Project:</label>
-      <select id="project-select" required></select>
-      <button type="submit">Assign</button>
-    </form>
-    <div id="assign-status"></div>
+    <!-- Example structure for admin-dashboard -->
+    <div class="admin-dashboard-flex">
+      <nav class="admin-sidebar">
+        <ul>
+          <li><button id="nav-create">Create Project</button></li>
+          <li><button id="nav-assign">Assign Project</button></li>
+          <li><button id="nav-projects">All Projects</button></li>
+        </ul>
+      </nav>
+      <div class="admin-content">
+        <section id="admin-create-section" class="admin-section hidden">
+          <!-- Create Project Form -->
+          <form id="project-form">
+            <h2>Create Project</h2>
+            <input type="text" id="project-name" placeholder="Project Name" required />
+            <textarea id="project-desc" placeholder="Project Description" required></textarea>
+            <input type="date" id="project-end" required />
+            <button type="submit">Create Project</button>
+          </form>
+          <div id="create-status" class="status-message"></div> <!-- moved here -->
+        </section>
+        <section id="admin-assign-section" class="admin-section hidden">
+          <!-- Assign Project Form -->
+          <form id="assign-form">
+            <h2>Assign Project</h2>
+            <label for="user-select">Select User:</label>
+            <select id="user-select" required></select>
+            <label for="project-select">Select Project:</label>
+            <select id="project-select" required></select>
+            <button type="submit">Assign</button>
+          </form>
+          <div id="assign-status" class="status-message"></div>
+        </section>
+        <section id="admin-projects-section" class="admin-section hidden">
+          <!-- All Projects Table -->
+          <h2>All Projects</h2>
+          <table class="dashboard-table">
+            <thead>
+              <tr>
+                <th>Project Name</th>
+                <th>Description</th>
+                <th>Assigned To</th>
+                <th>End Date</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="admin-table-body"></tbody>
+          </table>
+        </section>
+      </div>
+    </div>
 
     <button id="logout-btn-admin">Logout</button>
-
-    <h2>All Projects</h2>
-    <table class="dashboard-table">
-      <thead>
-        <tr>
-          <th>Project Name</th>
-          <th>Description</th>
-          <th>Assigned To</th>
-          <th>End Date</th>
-          <th>Status</th>
-          <th>Actions</th>
-        </tr>
-      </thead>
-      <tbody id="admin-table-body"></tbody>
-    </table>
   </div>
 
   <!-- Link main TypeScript bundle -->

@@ -87,6 +87,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const assignForm = document.getElementById('assign-form');
     const assignStatus = document.getElementById('assign-status');
     const adminTableBody = document.getElementById('admin-table-body');
+    const createStatus = document.getElementById('create-status');
     function fetchUsers() {
         return __awaiter(this, void 0, void 0, function* () {
             try {
@@ -112,32 +113,27 @@ document.addEventListener('DOMContentLoaded', () => {
                     .filter((p) => !p.user)
                     .map((p) => `<option value="${p.id}">${p.name}</option>`)
                     .join('');
-                adminTableBody.innerHTML = projects.map((project) => {
-                    var _a, _b;
-                    const assignedUser = ((_a = project.user) === null || _a === void 0 ? void 0 : _a.name) || '—';
-                    let statusText = 'Unassigned';
-                    let statusClass = 'status-unassigned';
-                    if (project.user && project.isCompleted) {
-                        statusText = 'Completed';
-                        statusClass = 'status-complete';
-                    }
-                    else if (project.user) {
-                        statusText = 'Assigned';
-                        statusClass = 'status-assigned';
-                    }
-                    return `
-          <tr>
-            <td>${project.name}</td>
-            <td>${project.description || ''}</td>
-            <td>${assignedUser}</td>
-            <td>${(_b = project.endDate) === null || _b === void 0 ? void 0 : _b.slice(0, 10)}</td>
-            <td class="${statusClass}">${statusText}</td>
-            <td>
-              ${project.user ? `<button onclick="unassignProject(${project.user.id})">Unassign</button>` : ''}
-              <button onclick="deleteProject(${project.id})">Delete</button>
-            </td>
-          </tr>`;
-                }).join('');
+                adminTableBody.innerHTML = projects.map((project) => `
+        <tr>
+          <td>${project.name}</td>
+          <td>${project.description}</td>
+          <td>${project.user ? project.user.name : '<span class="status-unassigned">Unassigned</span>'}</td>
+          <td>${project.endDate ? new Date(project.endDate).toLocaleDateString() : ''}</td>
+          <td>
+            ${project.completed
+                    ? '<span class="status-complete">Complete</span>'
+                    : (project.user
+                        ? '<span class="status-assigned">Assigned</span>'
+                        : '<span class="status-unassigned">Unassigned</span>')}
+          </td>
+          <td>
+            ${project.user
+                    ? `<button onclick="unassignProject(${project.user.id})">Unassign</button>`
+                    : ''}
+            <button onclick="deleteProject(${project.id})">Delete</button>
+          </td>
+        </tr>
+      `).join('');
             }
             catch (err) {
                 console.error('❌ Failed to fetch projects:', err);
@@ -160,36 +156,68 @@ document.addEventListener('DOMContentLoaded', () => {
             });
             if (!res.ok)
                 throw new Error('Failed to create project');
-            assignStatus.innerText = '✅ Project created successfully.';
+            createStatus.innerText = '✅ Project created successfully.';
             projectForm.reset();
             fetchProjects();
         }
         catch (err) {
-            assignStatus.innerText = '❌ Failed to create project.';
+            createStatus.innerText = '❌ Failed to create project.';
         }
     }));
     assignForm === null || assignForm === void 0 ? void 0 : assignForm.addEventListener('submit', (e) => __awaiter(void 0, void 0, void 0, function* () {
         e.preventDefault();
         const userId = parseInt(userSelect.value, 10);
         const projectId = parseInt(projectSelect.value, 10);
+        // Clear and show the status element
+        assignStatus.textContent = 'Processing assignment...';
+        assignStatus.className = 'status-message';
+        assignStatus.style.display = 'block';
         try {
             const res = yield fetch('http://localhost:3000/projects/assign', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    Authorization: `Bearer ${localStorage.getItem('token')}`,
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`,
                 },
                 body: JSON.stringify({ userId, projectId }),
             });
+            const data = yield res.json();
             if (!res.ok) {
-                const msg = yield res.text();
-                throw new Error(msg || 'Assign failed');
+                // Handle specific error cases from backend
+                if (data.message.includes('already has a project assigned')) {
+                    throw new Error('This user already has a project assigned');
+                }
+                else if (data.message.includes('already assigned to another user')) {
+                    throw new Error('This project is already assigned to another user');
+                }
+                else {
+                    throw new Error(data.message || 'Failed to assign project');
+                }
             }
-            assignStatus.innerText = '✅ Project assigned successfully.';
-            fetchProjects();
+            // Success case
+            assignStatus.innerHTML = '<strong>✅ Project assigned successfully!</strong>';
+            assignStatus.className = 'status-message status-success';
+            // Clear form selections
+            userSelect.value = '';
+            projectSelect.value = '';
+            // Refresh projects
+            yield fetchProjects();
+            // Auto-hide after 5 seconds
+            setTimeout(() => {
+                assignStatus.textContent = '';
+                assignStatus.className = 'status-message';
+            }, 5000);
         }
         catch (err) {
-            assignStatus.innerText = `❌ ${err.message}`;
+            // Error case - show specific error message
+            const errorMessage = err.message;
+            assignStatus.innerHTML = `<strong>❌ ${errorMessage}</strong>`;
+            assignStatus.className = 'status-message status-error';
+            // Keep error visible longer
+            setTimeout(() => {
+                assignStatus.textContent = '';
+                assignStatus.className = 'status-message';
+            }, 8000);
         }
     }));
     window.deleteProject = (id) => __awaiter(void 0, void 0, void 0, function* () {
@@ -268,12 +296,29 @@ document.addEventListener('DOMContentLoaded', () => {
         localStorage.clear();
         window.location.reload();
     });
+    // Admin navigation logic
+    const navCreate = document.getElementById('nav-create');
+    const navAssign = document.getElementById('nav-assign');
+    const navProjects = document.getElementById('nav-projects');
+    const adminCreateSection = document.getElementById('admin-create-section');
+    const adminAssignSection = document.getElementById('admin-assign-section');
+    const adminProjectsSection = document.getElementById('admin-projects-section');
+    function showAdminSection(section, navBtn) {
+        [adminCreateSection, adminAssignSection, adminProjectsSection].forEach(s => s.classList.remove('active'));
+        [navCreate, navAssign, navProjects].forEach(b => b.classList.remove('active'));
+        section.classList.add('active');
+        navBtn.classList.add('active');
+    }
+    // Default to show create project
+    navCreate === null || navCreate === void 0 ? void 0 : navCreate.addEventListener('click', () => showAdminSection(adminCreateSection, navCreate));
+    navAssign === null || navAssign === void 0 ? void 0 : navAssign.addEventListener('click', () => showAdminSection(adminAssignSection, navAssign));
+    navProjects === null || navProjects === void 0 ? void 0 : navProjects.addEventListener('click', () => showAdminSection(adminProjectsSection, navProjects));
+    // Show create project by default when admin dashboard loads
     function showAdminDashboard() {
-        return __awaiter(this, void 0, void 0, function* () {
-            showSection(adminDashboard);
-            yield fetchUsers();
-            yield fetchProjects();
-        });
+        showSection(adminDashboard);
+        fetchUsers();
+        fetchProjects();
+        showAdminSection(adminCreateSection, navCreate);
     }
     // Initial check
     if (token && role === 'admin')
