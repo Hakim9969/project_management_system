@@ -30,8 +30,8 @@ this.templatesPath = path.join(process.cwd(), 'src/mail/templates/email');
   private initializeTransporter() {
     const smtpConfig = {
       host: this.configService.get<string>('MAIL_HOST', 'smtp.gmail.com'),
-      port: parseInt(this.configService.get<string>('MAIL_PORT', '465')),
-      secure: true,
+      port: parseInt(this.configService.get<string>('MAIL_PORT', '587')),
+      secure: false,
       auth: {
         user: this.configService.get<string>('MAIL_USER'),
         pass: this.configService.get<string>('MAIL_PASS'),

@@ -120,7 +120,7 @@ document.addEventListener('DOMContentLoaded', () => {
           <td>${project.user ? project.user.name : '<span class="status-unassigned">Unassigned</span>'}</td>
           <td>${project.endDate ? new Date(project.endDate).toLocaleDateString() : ''}</td>
           <td>
-            ${project.completed
+            ${project.isCompleted
                     ? '<span class="status-complete">Complete</span>'
                     : (project.user
                         ? '<span class="status-assigned">Assigned</span>'
@@ -184,7 +184,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const data = yield res.json();
             if (!res.ok) {
                 // Handle specific error cases from backend
-                if (data.message.includes('already has a project assigned')) {
+                if (data.message.includes('User already has a project assigned')) {
                     throw new Error('This user already has a project assigned');
                 }
                 else if (data.message.includes('already assigned to another user')) {
@@ -195,7 +195,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
             // Success case
-            assignStatus.innerHTML = '<strong>✅ Project assigned successfully!</strong>';
+            assignStatus.innerHTML = '<strong>Project assigned successfully!</strong>';
             assignStatus.className = 'status-message status-success';
             // Clear form selections
             userSelect.value = '';
@@ -211,7 +211,7 @@ document.addEventListener('DOMContentLoaded', () => {
         catch (err) {
             // Error case - show specific error message
             const errorMessage = err.message;
-            assignStatus.innerHTML = `<strong>❌ ${errorMessage}</strong>`;
+            assignStatus.innerHTML = `<strong> ${errorMessage}</strong>`;
             assignStatus.className = 'status-message status-error';
             // Keep error visible longer
             setTimeout(() => {
@@ -263,8 +263,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 welcomeMessage.textContent = 'Welcome to your Dashboard';
                 projectSection.innerHTML = `
         <h2>Your Assigned Project:</h2>
-        <p><strong>${data.name}</strong></p>
-        <p>${data.description}</p>
+        <p><strong>Project name: ${data.name}</strong></p>
+        <p>Project description: ${data.description}</p>
         <p>End Date: ${new Date(data.endDate).toDateString()}</p>
         <p>Status: <span id="status-text">${data.isCompleted ? '✅ Completed' : '🕒 Ongoing'}</span></p>
       `;
